@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Customer Support Assistant · Donald B. Havery</title>
+<meta name="description" content="An AI customer-support assistant that answers from a company's own help documents, never makes anyone repeat themselves, and hands off to a human at the right moment. Runs on a frontier model (Claude, GPT, Gemini) or fully local. Working demo." />
+<meta property="og:title" content="Support that fixes it, and treats you like a person" />
+<meta property="og:description" content="A per-company AI support assistant: answers from the company's own help docs, never makes anyone repeat themselves, and hands off to a human at the right moment. Runs on a frontier model or fully local." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://support.dbhavery.ai" />
+<meta property="og:image" content="https://support.dbhavery.ai/og.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Support that fixes it, and treats you like a person" />
+<meta name="twitter:description" content="A per-company AI support assistant: answers from the company's own help docs, never makes anyone repeat themselves, hands off to a human at the right moment. Frontier model or fully local." />
+<meta name="twitter:image" content="https://support.dbhavery.ai/og.png" />
+<link rel="icon" href="https://dbhavery.ai/favicon.svg" />
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+<link href="https://api.fontshare.com/v2/css?f[]=zodiak@400,500,700&f[]=satoshi@400,500,700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:oklch(0.965 0.008 85);
+    --paper-2:oklch(0.935 0.011 84);
+    --ink:oklch(0.235 0.012 65);
+    --ink-2:oklch(0.46 0.012 62);
+    --faint:oklch(0.62 0.01 70);
+    --red:oklch(0.51 0.193 27);
+    --red-d:oklch(0.44 0.18 27);
+    --rule:oklch(0.83 0.012 78);
+    --rule-2:oklch(0.74 0.012 75);
+    --serif:'Zodiak',Georgia,serif;
+    --grot:'Satoshi',system-ui,sans-serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{background:var(--paper);color:var(--ink);font-family:var(--grot);font-size:18px;line-height:1.62;
+    overflow-x:hidden;-webkit-font-smoothing:antialiased;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E")}
+  a{color:inherit;text-decoration:none}
+  ::selection{background:var(--red);color:var(--paper)}
+  h1,h2,h3,.serif{font-family:var(--serif);font-weight:500;line-height:1.04;letter-spacing:-.01em}
+  .mono{font-family:var(--mono)}
+  sup{font-family:var(--grot);font-size:.56em;color:var(--red);font-weight:700;vertical-align:super;padding-left:1px}
+
+  .sheet{width:min(1140px,100% - 44px);margin-inline:auto}
+  /* running head */
+  .runhead{display:flex;justify-content:space-between;align-items:center;font-family:var(--grot);font-size:11px;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);padding:18px 0 0}
+  .runhead a:hover{color:var(--red)}
+  .runhead .l{display:flex;gap:18px}.runhead .red{color:var(--red)}
+  @media(max-width:680px){.runhead .l span:nth-child(2){display:none}}
+
+  /* hero / masthead */
+  .mast{padding:30px 0 0}
+  .rule{height:1px;background:var(--rule);transform-origin:left;border:0}
+  .rule.thick{height:2px;background:var(--ink)}
+  .mast .grid{display:grid;grid-template-columns:1fr 1.06fr;gap:44px;align-items:center;padding:34px 0 30px}
+  @media(max-width:880px){.mast .grid{grid-template-columns:1fr;gap:30px}}
+  .edition{font-family:var(--grot);font-size:12px;letter-spacing:.06em;color:var(--red);text-transform:uppercase}
+  h1{font-size:clamp(38px,6.6vw,84px);margin:16px 0 0;letter-spacing:-.025em}
+  h1 .u{text-decoration:underline;text-decoration-color:var(--red);text-decoration-thickness:.05em;text-underline-offset:.07em}
+  .standfirst{font-size:clamp(18px,1.7vw,21px);color:var(--ink-2);max-width:33em;margin:26px 0 0;font-weight:400}
+  .standfirst b{color:var(--ink);font-weight:700}
+  .byline{font-family:var(--grot);font-size:12px;color:var(--faint);margin-top:24px;letter-spacing:.03em}
+  .leadbtns{display:flex;flex-wrap:wrap;gap:0;margin-top:30px;border:1px solid var(--ink)}
+  .leadbtns a,.leadbtns button{font-family:var(--grot);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;
+    padding:15px 22px;background:transparent;color:var(--ink);border:0;cursor:pointer;border-right:1px solid var(--ink);transition:background .18s,color .18s}
+  .leadbtns a:last-child,.leadbtns button:last-child{border-right:0}
+  .leadbtns .go{background:var(--ink);color:var(--paper)}
+  .leadbtns .go:hover{background:var(--red);color:var(--paper)}
+  .leadbtns a:hover{background:var(--paper-2)}
+
+  /* transcript figure (self-playing) */
+  figure{margin:0;border:1px solid var(--ink);background:var(--paper-2)}
+  figure .cap{display:flex;justify-content:space-between;font-family:var(--grot);font-size:11px;text-transform:uppercase;
+    letter-spacing:.07em;color:var(--ink-2);padding:11px 16px;border-bottom:1px solid var(--rule-2)}
+  figure .cap b{color:var(--ink)}
+  /* hero chat window = the focal point after the headline */
+  #heroFig{border-width:1.5px;border-radius:3px;box-shadow:0 36px 80px -30px rgba(45,25,12,.6),0 10px 24px rgba(0,0,0,.1)}
+  #heroFig .cap{background:var(--ink);color:var(--paper);border-bottom:0;padding:13px 16px;font-weight:600}
+  #heroFig .cap b{color:var(--paper)}
+  #heroFig .ts{min-height:312px}
+  .figcta{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 16px;border-top:1px solid var(--rule-2);background:var(--paper)}
+  .figcta .live{font-family:var(--grot);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-2);font-weight:600}
+  .figcta button{font-family:var(--grot);font-weight:700;font-size:14px;border:0;border-radius:11px;padding:12px 19px;cursor:pointer;background:var(--red);color:var(--paper);display:inline-flex;align-items:center;gap:8px;transition:background .18s,transform .18s}
+  .figcta button:hover{background:var(--red-d);transform:translateY(-1px)}
+  .ts{padding:22px 22px 8px;min-height:266px;display:flex;flex-direction:column;justify-content:flex-start;gap:18px}
+  .qa{display:grid;grid-template-columns:26px 1fr;gap:12px;opacity:0;transform:translateY(8px)}
+  .qa .mk{font-family:var(--grot);font-weight:700;font-size:13px;color:var(--red);padding-top:3px}
+  .qa.ans .mk{color:var(--ink)}
+  .qa .tx{font-size:15.5px;line-height:1.55}
+  .qa.q .tx{font-weight:600}
+  .qa .sys{font-family:var(--grot);font-size:11.5px;color:var(--faint)}
+  figure .refs{border-top:1px solid var(--rule-2);padding:13px 22px 16px;min-height:30px;font-family:var(--grot);font-size:11.5px;color:var(--ink-2)}
+  figure .refs .h{color:var(--faint);text-transform:uppercase;letter-spacing:.07em;margin-right:10px}
+  figure .refs a{color:var(--red)}
+
+  /* section scaffold */
+  section{padding:78px 0}
+  .secnum{font-family:var(--grot);font-size:12px;letter-spacing:.08em;color:var(--red);text-transform:uppercase}
+  .h2{font-size:clamp(28px,4.6vw,52px);margin:12px 0 0;max-width:15em;letter-spacing:-.02em}
+  .deck{color:var(--ink-2);max-width:36em;margin:18px 0 0;font-size:18px}
+  .reveal{opacity:0;transform:translateY(22px)}
+
+  /* method / numbered spec list */
+  .spec{margin-top:46px;border-top:1px solid var(--ink)}
+  .row{display:grid;grid-template-columns:62px 1.1fr 1.3fr;gap:26px;padding:26px 4px;border-bottom:1px solid var(--rule);align-items:baseline}
+  @media(max-width:760px){.row{grid-template-columns:44px 1fr;gap:14px}.row .desc{grid-column:1/-1;padding-left:58px}}
+  .row .n{font-family:var(--serif);font-size:30px;color:var(--ink)}
+  .row.on .n{color:var(--red)}
+  .row h3{font-size:23px}
+  .row .desc{color:var(--ink-2);font-size:15.5px}
+  .row .desc .tag{font-family:var(--grot);font-size:12px;color:var(--red);display:block;margin-top:8px}
+
+  /* principles / editorial two-column prose, NOT cards */
+  .cols{margin-top:44px;columns:2;column-gap:48px;column-rule:1px solid var(--rule)}
+  @media(max-width:760px){.cols{columns:1}}
+  .pt{break-inside:avoid;padding-bottom:30px}
+  .pt .lab{font-family:var(--grot);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--red)}
+  .pt h3{font-size:21px;margin:8px 0 0;font-family:var(--serif)}
+  .pt p{color:var(--ink-2);margin-top:8px;font-size:15.5px}
+  .pt p .mono{color:var(--ink)}
+
+  /* profile listing */
+  .lst{margin-top:42px;display:grid;grid-template-columns:1.12fr .88fr;gap:40px;align-items:start}
+  @media(max-width:860px){.lst{grid-template-columns:1fr;gap:28px}}
+  .code{border:1px solid var(--ink);background:var(--paper-2)}
+  .code .cap{display:flex;justify-content:space-between;font-family:var(--grot);font-size:11px;text-transform:uppercase;
+    letter-spacing:.07em;color:var(--ink-2);padding:11px 16px;border-bottom:1px solid var(--rule-2)}
+  .code pre{margin:0;padding:18px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.78;color:var(--ink);white-space:pre}
+  .code .k{color:var(--red);font-weight:700}.code .s{color:var(--ink)}.code .c{color:var(--faint)}
+  .gloss h3{font-size:23px}
+  .gloss>p{color:var(--ink-2);margin-top:12px;font-size:15.5px}
+  .gloss dl{margin-top:22px;border-top:1px solid var(--rule)}
+  .gloss .d{display:grid;grid-template-columns:118px 1fr;gap:16px;padding:13px 0;border-bottom:1px solid var(--rule);font-size:14.5px}
+  .gloss dt{font-family:var(--grot);font-size:12px;color:var(--red);text-transform:uppercase;letter-spacing:.04em;padding-top:2px}
+  .gloss dd{color:var(--ink-2)}.gloss dd b{color:var(--ink);font-weight:700}
+
+  /* sources strip */
+  .srcline{margin-top:30px;display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--rule);font-family:var(--grot);font-size:12.5px}
+  .srcline span{padding:11px 16px;border-right:1px solid var(--rule);color:var(--ink-2)}
+  .srcline span:last-child{border-right:0}
+  .srcline .h{color:var(--red);text-transform:uppercase;letter-spacing:.06em}
+
+  /* stack / inline index */
+  .idx{margin-top:34px;display:flex;flex-wrap:wrap;gap:8px 0;font-family:var(--grot);font-size:13px;border-top:1px solid var(--rule)}
+  .idx span{padding:11px 18px 11px 0;color:var(--ink-2);border-bottom:1px solid var(--rule);flex:0 0 auto}
+
+  /* colophon / closing */
+  .colo{padding:92px 0 0;text-align:left}
+  .colo h2{font-size:clamp(32px,6.6vw,76px);max-width:13em;letter-spacing:-.025em}
+  .colo p{color:var(--ink-2);max-width:30em;margin:20px 0 0}
+  footer{border-top:1px solid var(--ink);margin-top:70px;padding:26px 0 40px}
+  footer .sheet{display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;align-items:center;
+    font-family:var(--grot);font-size:12px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em}
+  footer b{color:var(--ink)}
+  footer a:hover{color:var(--red)}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="runhead">
+    <div class="l"><span class="red">DBHAVERY.AI</span><span>Applied AI / AI Systems Engineering</span></div>
+    <a href="https://dbhavery.ai">Index ↗</a>
+  </div>
+</div>
+
+<div class="sheet mast">
+  <hr class="rule thick" id="topRule" />
+  <div class="grid">
+    <div>
+      <div class="edition">Field note 01 · Customer support, made human</div>
+      <h1 id="h1">Support that fixes it, <span class="u">and treats you like a person.</span><sup>1</sup></h1>
+      <p class="standfirst">Everyone knows what bad customer service feels like: the hold music, repeating your story five times, a script that never solves anything. This is a support assistant built to do the opposite. It listens, answers from the company's real help articles, and hands you to a human the moment one is needed, with the whole conversation attached so you never start over. <b>Compassion and competence, tuned to any business.</b></p>
+      <div class="leadbtns">
+        <button class="go" data-hot onclick="window.openSupportDemo&&window.openSupportDemo()">Chat with it →</button>
+        <a href="#fix" data-hot>See how it helps</a>
+      </div>
+      <div class="byline">By Donald B. Havery · grounded retrieval, runs on a frontier model or fully local</div>
+    </div>
+
+    <figure id="heroFig">
+      <div class="cap"><span>Sample transcript</span><b>Northwind Outdoors</b></div>
+      <div class="ts" id="ts"></div>
+      <div class="refs" id="refs"></div>
+      <div class="figcta"><span class="live">Self-playing sample · no live model</span><button type="button" onclick="window.openSupportDemo&&window.openSupportDemo()">Ask it yourself →</button></div>
+    </figure>
+  </div>
+  <hr class="rule" />
+  <p class="byline" style="padding:14px 0 0;color:var(--ink-2);max-width:62em;font-size:13px;line-height:1.6">
+    <b style="color:var(--ink-2)">Note on this page.</b> A static, always-on edition. The transcript and the live assistant answer from a sample company's real help articles by client-side retrieval, with each source footnoted. The full application runs the same retrieval and then a language model, hosted or local, writes the reply. This page swaps that one step for fixed answers so it costs nothing and never goes down.
+  </p>
+</div>
+
+<section id="problem">
+  <div class="sheet">
+    <span class="secnum reveal">§ 01 / The problem, both sides</span>
+    <h2 class="h2 reveal">Support is broken for the customer and the business at the same time.</h2>
+    <p class="deck reveal">It is the same call from two ends. The customer wants one thing fixed and to feel heard. The business wants to help everyone without going broke or burning out its people. The system in the middle usually lets both down.</p>
+    <div class="cols reveal">
+      <div class="pt"><div class="lab">What the customer dreads</div><h3>The runaround.</h3><p>Hold music and "your call is important to us." Telling the whole story, then telling it again to the next person. A script that never quite answers the question. Being transferred, disconnected, and told to call back. And the worst one: hanging up with the problem still not solved.</p></div>
+      <div class="pt"><div class="lab">What it costs the business</div><h3>An impossible trade.</h3><p>Live help is expensive and almost impossible to staff around the clock. Good agents burn out repeating the same fifty answers. Quality swings between a great rep and a tired one. The knowledge to fix things exists, but it is scattered, and routine questions bury the cases that genuinely need a human.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="good">
+  <div class="sheet">
+    <span class="secnum reveal">§ 02 / What good feels like</span>
+    <h2 class="h2 reveal">The good experiences all share the same three things.</h2>
+    <p class="deck reveal">Think about the last time customer service actually went well. It almost certainly felt like this.</p>
+    <div class="spec">
+      <div class="row"><div class="n">1</div><h3>Someone listened.</h3><div class="desc">You were treated like a person with a problem, not a case number. They took in the whole thing before answering, and they sounded like they cared that it went wrong.<span class="tag">respect, not a script</span></div></div>
+      <div class="row"><div class="n">2</div><h3>They actually knew the answer.</h3><div class="desc">Clear, correct, specific to your situation. No guessing, no "let me look into that" that quietly goes nowhere.<span class="tag">competence</span></div></div>
+      <div class="row"><div class="n">3</div><h3>It got resolved.</h3><div class="desc">You left with it fixed, or with a real next step and a person who owned it. You did not have to call back tomorrow.<span class="tag">resolution</span></div></div>
+    </div>
+    <p class="deck reveal">That is the whole bar: compassion, competence, and the problem actually solved. This assistant is built to clear it on the everyday questions, and to know the exact moment a person should take the rest.</p>
+  </div>
+</section>
+
+<section id="fix">
+  <div class="sheet">
+    <span class="secnum reveal">§ 03 / How this fixes it</span>
+    <h2 class="h2 reveal">Every old frustration, answered.</h2>
+    <p class="deck reveal">Take each thing people dread about contacting support, and here is what this assistant does instead.</p>
+    <div class="spec">
+      <div class="row"><div class="n">›</div><h3>"I waited on hold forever."</h3><div class="desc">It answers the second they ask, any hour, with no queue. Speed is the first thing customers rank, and the line is never closed.<span class="tag">instant, around the clock</span></div></div>
+      <div class="row"><div class="n">›</div><h3>"I had to repeat my whole story."</h3><div class="desc">It holds the thread, and when a person steps in they inherit all of it. Nobody starts over. Repeating yourself is the single biggest reason people come to resent support.<span class="tag">full context, always</span></div></div>
+      <div class="row"><div class="n">›</div><h3>"The bot just looped me."</h3><div class="desc">If it cannot help, or it catches itself repeating, it stops and gets a person, instead of trapping anyone in a maze of menus.<span class="tag">no dead ends</span></div></div>
+      <div class="row"><div class="n">›</div><h3>"It felt cold and robotic."</h3><div class="desc">It speaks in plain, warm language, notices when someone is upset, and apologizes like it means it, all in the company's own voice.<span class="tag">compassion, on brand</span></div></div>
+      <div class="row"><div class="n">›</div><h3>"It just made something up."</h3><div class="desc">It answers only from the company's real help articles and shows the source. No invented refund windows, no confident guesses.<span class="tag">grounded, and cited</span></div></div>
+      <div class="row"><div class="n">›</div><h3>"I could never reach a human."</h3><div class="desc">A way to reach a person stays in plain sight the entire time, and it offers one on its own the moment things get hard.<span class="tag">a door that's never locked</span></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="example">
+  <div class="sheet">
+    <span class="secnum reveal">§ 04 / One conversation, start to finish</span>
+    <h2 class="h2 reveal">A real problem, handled with care.</h2>
+    <p class="deck reveal">A customer whose gear failed right before a trip. Watch the tone, the grounded answer, and the clean hand to a human the moment the stakes rise.</p>
+    <figure class="reveal" style="margin-top:34px">
+      <div class="cap"><span>Example transcript</span><b>Northwind Outdoors</b></div>
+      <div class="ts">
+        <div class="qa q reveal"><div class="mk">C</div><div class="tx">My tent poles snapped on day one and I'm stuck out here for four more nights. This is a disaster.</div></div>
+        <div class="qa ans reveal"><div class="mk">A</div><div class="tx">Oh no, that is the last thing you need in the middle of a trip. I'm sorry. Let me make this quick. A pole that snaps under normal use is covered by our warranty, and since it failed on you in the field I don't want you stuck filling out a claim form out there. I'm flagging it for a same-day replacement and a person will confirm the shipping details with you in a few minutes.<sup>1</sup></div></div>
+        <div class="qa q reveal"><div class="mk">C</div><div class="tx">I just need it before the weekend, honestly.</div></div>
+        <div class="qa ans reveal"><div class="mk">A</div><div class="tx">Completely fair. Overnight arrives the next business day if it ships before noon Pacific, and I have marked this one urgent. I'm handing you to a teammate now with everything above, so you won't repeat a word of it. If you would rather call, the team is at 1-800-555-0142.<sup>2</sup></div></div>
+      </div>
+      <div class="refs"><span class="h">Sources</span>1 · warranty.md &nbsp; &nbsp; 2 · shipping-policy.md · escalated to a human, full context</div>
+    </figure>
+    <p class="deck reveal">No hold music. No repeating the story. A grounded answer, real warmth, and a person brought in at the right moment with the whole thread in hand.</p>
+  </div>
+</section>
+
+<section id="voice">
+  <div class="sheet">
+    <span class="secnum reveal">§ 05 / It talks like a person</span>
+    <h2 class="h2 reveal">Human-level conversation, not a phone tree.</h2>
+    <div class="cols reveal">
+      <div class="pt"><div class="lab">It reads the room</div><h3>Warmth when it counts.</h3><p>When someone is frustrated, or something genuinely went wrong, it leads with a real apology and slows down instead of firing back a canned line. Specific, honest empathy, never a hollow "I understand your concern."</p></div>
+      <div class="pt"><div class="lab">Plain language</div><h3>Clear, not corporate.</h3><p>Short, direct answers in everyday words, framed around what can be done right now. It sets expectations honestly and tells people exactly what happens next.</p></div>
+      <div class="pt"><div class="lab">Your voice</div><h3>It sounds like your brand.</h3><p>The tone is set per company, from a warm outdoor shop to a calm clinic to a precise software team. Same engine underneath, your personality on top.</p></div>
+      <div class="pt"><div class="lab">Honest about itself</div><h3>It never pretends to be human.</h3><p>It says it's a virtual assistant up front, and treats handing you to a person as a feature, not a failure. Being straight about what it is earns more trust than faking it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="handoff">
+  <div class="sheet">
+    <span class="secnum reveal">§ 06 / Works with your people</span>
+    <h2 class="h2 reveal">It hands off to a human, not into a void.</h2>
+    <p class="deck reveal">The most common way AI support fails is the handoff itself: the customer gets bounced to a person and has to start the whole story over. That moment of lost context is the biggest single reason people say they hate support bots, so it is the part this is built around.</p>
+    <div class="cols reveal">
+      <div class="pt"><div class="lab">No restart</div><h3>The human inherits the whole conversation.</h3><p>What was asked, which article answered it, what the assistant already tried, and the customer's own words all travel to the agent. The person picks up where the bot left off, and nobody repeats themselves.</p></div>
+      <div class="pt"><div class="lab">Right moment</div><h3>It escalates before you have to beg.</h3><p>A frustrated tone, the same question asked twice, or a high-stakes topic trips a handoff on its own. The customer never has to fight a menu to reach a person.</p></div>
+      <div class="pt"><div class="lab">Humans decide</div><h3>People keep the judgment calls.</h3><p>The assistant clears the repetitive volume so a person spends their hours on the cases that genuinely need one, arriving with the easy parts already done.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="profile">
+  <div class="sheet">
+    <span class="secnum reveal">§ 07 / Tuned for any business</span>
+    <h2 class="h2 reveal">Customized for any business, in one file.</h2>
+    <div class="lst">
+      <div class="code reveal">
+        <div class="cap"><span>Listing 1</span><span>companies/northwind-outdoors/company.yaml</span></div>
+<pre><span class="c"># the company powering the transcript above</span>
+company:
+  <span class="k">display_name</span>: <span class="s">"Northwind Outdoors"</span>
+  <span class="k">tagline</span>: <span class="s">"Gear for people who'd rather be outside"</span>
+branding:
+  <span class="k">colors</span>: { primary: <span class="s">"#1f6f54"</span>, accent: <span class="s">"#f4a23b"</span> }
+  <span class="k">tone</span>: <span class="s">"warm, outdoorsy, practical"</span>
+support:
+  <span class="k">in_scope</span>:     [orders, shipping, returns, gear care, warranty]
+  <span class="k">out_of_scope</span>: [wholesale pricing, payment-card details]
+escalation:
+  <span class="k">triggers</span>: [<span class="s">"speak to a human"</span>, <span class="s">"lost package"</span>, <span class="s">"refund over $300"</span>]
+  <span class="k">contact</span>:  { phone: <span class="s">"1-800-555-0142"</span>, hours: <span class="s">"Mon-Fri 8-6 PT"</span> }
+knowledge_base:
+  <span class="k">path</span>: <span class="s">"knowledge"</span>   <span class="c"># 6 articles, chunked and embedded</span>
+llm:
+  <span class="k">tier</span>: <span class="s">"fast"</span>        <span class="c"># a local Ollama model, no external API</span></pre>
+      </div>
+      <div class="gloss reveal">
+        <h3>Change the business, not the engine.</h3>
+        <p>The profile compiles into the assistant's system prompt and its runtime behavior. Swap this file and the knowledge folder, and the same code speaks for a different company.</p>
+        <dl>
+          <div class="d"><dt>Branding</dt><dd>sets the widget's look and the assistant's <b>tone</b>.</dd></div>
+          <div class="d"><dt>Scope</dt><dd>draws the line between an answer and a <b>polite decline</b>.</dd></div>
+          <div class="d"><dt>Escalation</dt><dd>names what a bot should <b>never</b> handle alone.</dd></div>
+          <div class="d"><dt>Knowledge</dt><dd>is the <b>only</b> thing it is allowed to answer from.</dd></div>
+        </dl>
+      </div>
+    </div>
+    <div class="srcline reveal">
+      <span class="h">Grounded in</span><span>returns-policy.md</span><span>shipping-policy.md</span><span>warranty.md</span><span>account-and-orders.md</span><span>product-faq.md</span><span>contact-and-hours.md</span>
+    </div>
+  </div>
+</section>
+
+<section id="stack">
+  <div class="sheet">
+    <span class="secnum reveal">§ 08 / Under the hood</span>
+    <h2 class="h2 reveal">The architecture is the product. The model is a config line.</h2>
+    <p class="deck reveal">Retrieval over the company's documents, a model allowed to answer only from what it pulled, and a policy layer that decides when to hand off. That core holds whichever engine powers it, so a business is never locked to one vendor.</p>
+    <div class="cols reveal">
+      <div class="pt"><div class="lab">Engine, option one</div><h3>A frontier model, for top quality.</h3><p>Most support SaaS runs on a hosted model: Claude, GPT, or Gemini, reached by API or kept inside the company's own cloud through Bedrock, Azure, or Vertex. Best answer quality, fastest to launch. A cheap model handles routine questions and only the hard ones escalate to a larger one.</p></div>
+      <div class="pt"><div class="lab">Engine, option two</div><h3>Fully private, for regulated work.</h3><p>The same app runs on self-hosted open models such as Llama, Qwen, or Mistral, inside the company's own walls. No conversation leaves the building and there is no per-token bill. It is the right call for healthcare, finance, or anyone who cannot send customer data to a third party.</p></div>
+    </div>
+    <div class="idx reveal">
+      <span>Claude / GPT / Gemini, or local open models</span><span>RAG + citations</span><span>vector DB: Pinecone / Qdrant / pgvector / Chroma</span><span>embeddings + reranker</span><span>company.yaml profiles</span><span>policy + escalation</span><span>Shadow-DOM widget</span><span>evals + observability</span>
+    </div>
+  </div>
+</section>
+
+<div class="sheet colo">
+  <hr class="rule" />
+  <div style="padding-top:40px">
+    <span class="secnum reveal">§ 09 / Try it</span>
+    <h2 class="reveal">Ask it something. Push back. Ask for a human.</h2>
+    <p class="reveal">Returns, shipping, a warranty claim, where an order is, or tell it you're frustrated and want a person. It resolves what it can from Northwind's documents, shows its sources, and gets a human the moment it should.</p>
+    <div class="leadbtns reveal" style="margin-top:30px">
+      <button class="go" data-hot onclick="window.openSupportDemo&&window.openSupportDemo()">Open the assistant →</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="sheet">
+    <div>Built by <b>Donald B. Havery</b> · Applied AI / AI Systems Engineer</div>
+    <div><a href="https://dbhavery.ai">dbhavery.ai</a> · <a href="https://github.com/dbhavery" target="_blank" rel="noopener">github.com/dbhavery</a></div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lenis/1.1.13/lenis.min.js"></script>
+<script src="assets/kb.js"></script>
+<script src="assets/app.js"></script>
+<script src="assets/widget.js"></script>
+</body>
+</html>
