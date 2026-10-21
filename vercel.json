@@ -1,0 +1,8 @@
+{
+  "functions": {
+    "api/answer.js": {
+      "includeFiles": "{kb/**,assets/core.js,assets/kb.js}",
+      "maxDuration": 20
+    }
+  }
+}

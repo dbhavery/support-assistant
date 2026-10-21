@@ -1,20 +1,27 @@
 /*
- * Customer Support Assistant, static showcase widget.
+ * Customer Support Assistant: the chat widget (Shadow DOM, no dependencies).
  *
- * Same Shadow-DOM design and behaviour as the real embeddable widget
- * (apps/customer-assistant/widget), but the /chat round-trip is replaced with a
- * client-side retrieval over the bundled help articles (assets/kb.js). No
- * backend, no API key, always on.
+ * For each question it:
+ *   1. checks for frustration, a request for a person, a high-stakes topic or
+ *      an out-of-scope topic (whole-word matching, assets/core.js);
+ *   2. ranks the help article sections in /kb with BM25, in the browser;
+ *   3. asks /api/answer for a Claude answer grounded in the top passages, and
+ *      shows the passage it used;
+ *   4. when the model is off, the key is missing or the call fails, shows the
+ *      best passage itself with its article and section, and says so.
+ * "Talk to a person" shows the summary a teammate would receive (transcript
+ * and detected topic). This demo has no inbox, so nothing is sent.
  *
- * Behaviour follows ../RESEARCH.md: discloses it's a virtual assistant; a
- * persistent "Talk to a person" exit; frustration -> empathy + escalate; no
- * looping; confirms resolution after every answer; hands off with full context.
+ * Behavior follows ../RESEARCH.md: says it is a virtual assistant, keeps a
+ * "Talk to a person" button in view, hands off on frustration or a repeated
+ * question, and asks whether each answer solved the problem.
  */
 (function () {
   "use strict";
 
   var KB = window.SUPPORT_KB;
-  if (!KB) return;
+  var CORE = window.SupportCore;
+  if (!KB || !CORE) return;
   var C = KB.company.colors;
   var CONTACT = KB.company.escalation.contact;
   var P = C.primary, ACC = C.accent, BG = C.background, SURF = C.surface, TXT = C.text;
@@ -72,6 +79,11 @@
     "background:rgba(0,0,0,.28);border:1px solid " + alpha(ACC, .55) + ";color:" + ACC + "}" +
     ".cite::before{content:'';width:7px;height:9px;flex:none;border:1px solid " + ACC + ";border-radius:1px;opacity:.8}" +
     ".badge{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;padding:4px 10px;border-radius:999px;background:" + ACC + ";color:#1a1206;margin-top:10px;font-weight:700}" +
+    ".quote{margin-top:10px;padding:9px 11px;border-radius:10px;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.08);font-size:13px;line-height:1.5}" +
+    ".passage{margin-top:10px;font-size:12px}" +
+    ".passage summary{cursor:pointer;color:" + ACC + ";opacity:.9}" +
+    ".ptext{margin-top:6px;padding:9px 11px;border-radius:10px;background:rgba(0,0,0,.24);border:1px solid rgba(255,255,255,.08);font-size:12.5px;line-height:1.5;white-space:pre-wrap}" +
+    ".summary{margin:10px 0 0;padding:9px 11px;border-radius:10px;background:rgba(0,0,0,.3);border:1px dashed " + alpha(ACC, .55) + ";font:12px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-wrap:break-word;max-height:220px;overflow:auto}" +
 
     ".acts{align-self:flex-start;display:flex;flex-wrap:wrap;gap:7px;margin:-1px 0 3px}" +
     ".act{font-size:12px;padding:7px 12px;border-radius:999px;cursor:pointer;border:1px solid rgba(255,255,255,.18);" +
@@ -142,7 +154,28 @@
     "Where's my order?",
   ];
 
-  var state = { lastIntent: null, escalated: false, greeted: false };
+  var state = {
+    lastPassageId: null,
+    lastTopic: null,
+    escalated: false,
+    greeted: false,
+    modelOff: false,
+    transcript: [],
+  };
+
+  // ── Help articles: fetched from /kb and indexed in the browser ────────────
+  var indexPromise = null;
+  function loadIndex() {
+    if (indexPromise) return indexPromise;
+    indexPromise = Promise.all(KB.articles.map(function (file) {
+      return fetch("kb/" + file).then(function (r) {
+        if (!r.ok) throw new Error(file + " " + r.status);
+        return r.text();
+      }).then(function (md) { return CORE.parseArticle(file, md); });
+    })).then(function (articles) { return CORE.buildIndex(articles); });
+    indexPromise.catch(function () { indexPromise = null; });
+    return indexPromise;
+  }
 
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -153,25 +186,57 @@
     var el = document.createElement("div");
     el.className = "msg " + role;
     el.innerHTML = esc(text);
-    if (opts.citations && opts.citations.length) {
+    if (opts.passageText) {
+      var q = document.createElement("div");
+      q.className = "quote";
+      q.textContent = opts.passageText;
+      el.appendChild(q);
+    }
+    if (opts.sources && opts.sources.length) {
       var wrap = document.createElement("div");
       wrap.className = "cites";
-      opts.citations.forEach(function (src) {
+      opts.sources.forEach(function (src) {
         var chip = document.createElement("span");
         chip.className = "cite";
-        chip.textContent = src;
+        chip.textContent = src.article + ": " + src.section;
         wrap.appendChild(chip);
       });
       el.appendChild(wrap);
     }
+    if (opts.passage) {
+      var d = document.createElement("details");
+      d.className = "passage";
+      var s = document.createElement("summary");
+      s.textContent = "Passage used: " + opts.passage.article + ", " + opts.passage.section;
+      var body = document.createElement("div");
+      body.className = "ptext";
+      body.textContent = opts.passage.text;
+      d.appendChild(s);
+      d.appendChild(body);
+      el.appendChild(d);
+    }
+    if (opts.summary) {
+      var pre = document.createElement("pre");
+      pre.className = "summary";
+      pre.textContent = opts.summary;
+      el.appendChild(pre);
+    }
     if (opts.escalate) {
       var b = document.createElement("div");
       b.className = "badge";
-      b.textContent = "Bringing in a human";
+      b.textContent = "Handoff to a person";
       el.appendChild(b);
     }
     logEl.appendChild(el);
     logEl.scrollTop = logEl.scrollHeight;
+    if (role === "user") state.transcript.push({ role: "customer", text: text });
+    else if (role === "bot" && !opts.summary) {
+      var logged = opts.passageText ? "Showed the help article section directly." : text;
+      if (opts.sources && opts.sources.length) {
+        logged += " [source: " + opts.sources.map(function (s) { return s.article + ", " + s.section; }).join("; ") + "]";
+      }
+      state.transcript.push({ role: "assistant", text: logged });
+    }
     return el;
   }
 
@@ -199,91 +264,81 @@
     return el;
   }
 
-  function normalize(s) {
-    return " " + String(s).toLowerCase().replace(/[^a-z0-9$\s]/g, " ").replace(/\s+/g, " ") + " ";
-  }
-
   function contactLine() {
     return " You can also reach the team directly at " + CONTACT.phone + " or " + CONTACT.email + " (" + CONTACT.hours + ").";
   }
 
-  function resolve(message) {
-    var q = normalize(message);
-    var i, k;
-
-    for (i = 0; i < KB.frustrationTriggers.length; i++) {
-      if (q.indexOf(KB.frustrationTriggers[i]) !== -1) {
-        return {
-          kind: "frustration",
-          answer: "I'm sorry, that sounds genuinely frustrating, and I don't want to make you keep typing at a bot. Let me get a person on it now. I'm handing them this whole conversation so you won't have to repeat anything." + contactLine(),
-          citations: [], escalate: true,
-        };
-      }
-    }
-    for (i = 0; i < KB.escalationTriggers.length; i++) {
-      if (q.indexOf(KB.escalationTriggers[i]) !== -1) {
-        return {
-          kind: "escalate",
-          answer: KB.company.escalation.message + contactLine(),
-          citations: ["contact-and-hours.md"], escalate: true,
-        };
-      }
-    }
-    for (i = 0; i < KB.outOfScope.length; i++) {
-      for (k = 0; k < KB.outOfScope[i].kw.length; k++) {
-        if (q.indexOf(KB.outOfScope[i].kw[k]) !== -1) {
-          return {
-            kind: "oos",
-            answer: "That's a little outside what I can help with here (" + KB.outOfScope[i].topic +
-              "), so I won't guess. The team can sort it out directly at " + CONTACT.email + ".",
-            citations: [], escalate: false,
-          };
-        }
-      }
-    }
-    var best = null, bestScore = 0;
-    KB.intents.forEach(function (intent) {
-      var score = 0;
-      intent.keywords.forEach(function (kw) {
-        if (q.indexOf(kw) !== -1) score += kw.split(" ").length * 2;
-      });
-      intent.keywords.forEach(function (kw) {
-        kw.split(" ").forEach(function (tok) {
-          if (tok.length > 3 && q.indexOf(" " + tok) !== -1) score += 0.5;
-        });
-      });
-      if (score > bestScore) { bestScore = score; best = intent; }
-    });
-    if (best && bestScore >= 1) {
-      return { kind: "intent", intentId: best.id, answer: best.answer, citations: [best.source], escalate: false };
-    }
-    return {
-      kind: "fallback",
-      answer: "I'm not certain I have an article on that, and I'd rather not guess. I can help with orders and tracking, shipping, returns and refunds, gear care and sizing, warranties, and account help. Want me to get a person instead?",
-      citations: [], escalate: false,
-    };
-  }
-
-  function escalateNow(prefix) {
+  // Hand off to a person: show the summary a teammate would receive. This
+  // demo has no inbox behind it, so it says so instead of claiming it sent it.
+  function escalateNow(prefix, reason) {
     if (state.escalated) {
-      addMessage("bot", "You're already in line for a teammate. They'll have the full thread, so there's no need to repeat yourself.");
+      addMessage("bot", "You're already set up for a teammate. The summary above is what they would get.");
       return;
     }
     state.escalated = true;
-    var msg = (prefix ? prefix + " " : "") + KB.company.escalation.message + contactLine();
-    var t = addTyping();
-    setTimeout(function () {
-      t.remove();
-      addMessage("bot", msg, { escalate: true, citations: ["contact-and-hours.md"] });
-    }, 360);
+    var summary = CORE.buildHandoffSummary(state.transcript.slice(), state.lastTopic, reason);
+    var msg = (prefix ? prefix + " " : "") + KB.company.escalation.message +
+      " In this demo nothing is sent anywhere." + contactLine();
+    addMessage("bot", msg, { escalate: true, summary: summary });
   }
 
   function offerResolution() {
     addActions([
-      { label: "Yes, that's sorted", run: function () { addMessage("bot", "Glad that did it. Anything else I can pull up for you?"); } },
-      { label: "Still stuck", run: function () { escalateNow("Sorry that didn't fully sort it."); } },
-      { label: "Talk to a person", run: function () { escalateNow(null); } },
+      { label: "Yes, that's sorted", run: function () { addMessage("bot", "Glad that did it. Anything else I can look up for you?"); } },
+      { label: "Still stuck", run: function () { escalateNow("Sorry that didn't fully sort it.", "the answer did not solve it"); } },
+      { label: "Talk to a person", run: function () { escalateNow(null, "customer asked for a person"); } },
     ]);
+  }
+
+  // Answer a normal question: retrieve, then ask the model, then fall back.
+  // Resolves to a render function, so the typing dots stay up until the
+  // answer is ready.
+  function answerQuestion(text) {
+    return loadIndex().then(function (index) {
+      var hits = CORE.search(index, text, 3);
+      if (!hits.length || hits[0].score < CORE.MIN_SCORE) {
+        return function () {
+          addMessage("bot", "I couldn't find a help article that covers that, and I'd rather not guess. I can help with orders and tracking, shipping, returns and refunds, gear care and sizing, warranties, and account help. Want me to get a person instead?");
+          addActions([{ label: "Talk to a person", run: function () { escalateNow(null, "no help article matched the question"); } }]);
+        };
+      }
+      var top = hits[0].passage;
+      if (top.id === state.lastPassageId) {
+        state.lastTopic = top.article;
+        return function () {
+          escalateNow("That answer clearly didn't settle it, and I don't want to send you in circles.", "the same question came back after an answer");
+        };
+      }
+      state.lastPassageId = top.id;
+      state.lastTopic = top.article;
+      var passages = hits.map(function (h) { return h.passage; });
+      var call = state.modelOff
+        ? Promise.resolve(CORE.passageFallback(top, "model-off"))
+        : CORE.requestModelAnswer(window.fetch.bind(window), "api/answer", text, passages, 12000);
+      return call.then(function (result) {
+        return function () {
+          if (result.mode === "model") {
+            addMessage("bot", result.answer, { sources: result.sources, passage: result.passage });
+            addMessage("note", "Written by Claude from the passage above. Its numbers and contact details were checked against that passage.");
+            offerResolution();
+          } else if (result.mode === "unknown") {
+            addMessage("bot", result.answer || "The help articles don't answer that, so I won't guess.");
+            addActions([{ label: "Talk to a person", run: function () { escalateNow(null, "the help articles did not answer the question"); } }]);
+          } else {
+            var off = /^(model-off|disabled|no-key|http-404|http-405|http-501)$/.test(result.reason);
+            if (off) state.modelOff = true;
+            var lead = off
+              ? "The AI answer is turned off on this demo, so here is the help article section that best matches your question."
+              : "I couldn't get a checked AI answer this time, so here is the help article section that best matches your question.";
+            addMessage("bot", lead, { sources: result.sources, passageText: result.answer });
+            addMessage("note", "Found in your browser by BM25 ranking over Northwind's help articles.");
+            offerResolution();
+          }
+        };
+      });
+    }, function () {
+      return function () { addMessage("bot", "I couldn't load the help articles just now." + contactLine()); };
+    });
   }
 
   function send(text) {
@@ -294,29 +349,37 @@
     input.disabled = true; sendBtn.disabled = true;
     chipsEl.style.display = "none";
     var typing = addTyping();
+    var c = CORE.classifyMessage(text, KB);
 
-    var res = resolve(text);
-    var repeat = res.kind === "intent" && res.intentId === state.lastIntent;
+    var started = Date.now();
+    var work;
+    if (c.kind === "frustration") {
+      work = Promise.resolve(function () {
+        escalateNow("I'm sorry, that sounds frustrating, and I don't want to make you keep typing at a bot.", "frustration (\"" + c.trigger + "\")");
+      });
+    } else if (c.kind === "escalate") {
+      work = Promise.resolve(function () { escalateNow(null, "request or high-stakes topic (\"" + c.trigger + "\")"); });
+    } else if (c.kind === "oos") {
+      work = Promise.resolve(function () {
+        addMessage("bot", "That's outside what I can help with here (" + c.topic + "), so I won't guess. The team can sort it out directly at " + CONTACT.email + ".");
+      });
+    } else {
+      work = answerQuestion(text);
+    }
 
-    setTimeout(function () {
+    work.then(function (render) {
+      // A short pause so the typing dots read as a reply, not a flash.
+      var wait = Math.max(0, 380 - (Date.now() - started));
+      return new Promise(function (r) { setTimeout(r, wait); }).then(function () {
+        typing.remove();
+        return render();
+      });
+    }).catch(function () {
       typing.remove();
-      if (repeat) {
-        state.escalated = true;
-        addMessage("bot", "That clearly didn't fully answer it, and I don't want to send you in circles. Let me get a person, with the whole conversation so you won't repeat yourself." + contactLine(), { escalate: true, citations: ["contact-and-hours.md"] });
-      } else {
-        addMessage("bot", res.answer, { citations: res.citations, escalate: res.escalate });
-        if (res.kind === "intent") {
-          addMessage("note", "answered from Northwind's help articles, grounded retrieval");
-          state.lastIntent = res.intentId;
-          offerResolution();
-        } else if (res.kind === "fallback") {
-          addActions([{ label: "Talk to a person", run: function () { escalateNow(null); } }]);
-        } else if (res.kind === "escalate" || res.kind === "frustration") {
-          state.escalated = true;
-        }
-      }
+      addMessage("bot", "Something went wrong on my side." + contactLine());
+    }).then(function () {
       input.disabled = false; sendBtn.disabled = false; input.focus();
-    }, 460);
+    });
   }
 
   function renderChips() {
@@ -351,7 +414,7 @@
   }
 
   launcher.addEventListener("click", function () { setOpen(!panel.classList.contains("open")); });
-  talkBtn.addEventListener("click", function () { escalateNow(null); });
+  talkBtn.addEventListener("click", function () { escalateNow(null, "customer asked for a person"); });
   form.addEventListener("submit", function (e) { e.preventDefault(); send(); });
 
   window.openSupportDemo = function () { setOpen(true); };

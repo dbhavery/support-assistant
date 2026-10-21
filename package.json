@@ -1,0 +1,9 @@
+{
+  "name": "support-assistant",
+  "private": true,
+  "description": "Support chat widget with in-browser BM25 retrieval over help articles and an optional Claude answer step.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test \"test/*.test.js\""
+  }
+}
