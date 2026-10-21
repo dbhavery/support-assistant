@@ -1,5 +1,5 @@
-/* Page behaviour: Lenis smooth scroll, GSAP reveals + rule draws, active
- * method row, and the self-playing footnoted transcript (from the real KB). */
+/* Page behavior: Lenis smooth scroll, GSAP reveals + rule draws, active
+ * method row, and the self-playing footnoted transcript (a written example). */
 (function () {
   "use strict";
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -54,7 +54,7 @@
     { q: "How much is overnight shipping?", src: "shipping-policy.md",
       a: "Overnight is $29.95 and arrives the next business day if you order before 12pm PT. Standard Ground is free on orders over $75." },
     { q: "This is the second time I've asked. Frustrating.", src: "contact-and-hours.md", escalate: true, frustrated: true,
-      a: "I'm sorry, that's genuinely frustrating. Let me get a person on it now, and I'm passing them this whole conversation so you won't repeat anything. You can also reach the team at 1-800-555-0142, Mon-Fri 8am-6pm PT." },
+      a: "I'm sorry, that's genuinely frustrating. Let me get a person on it now, and they'll get a summary of this conversation so you won't repeat anything. You can also reach the team at 1-800-555-0142, Mon-Fri 8am-6pm PT." },
   ];
 
   function add(cls, mk, html) {
@@ -81,7 +81,7 @@
         var a = add("ans", step.escalate ? "!" : "A", step.a + '<sup>' + n + '</sup>');
         if (step.escalate) a.querySelector(".mk").style.color = "var(--red)";
         rise(a);
-        refsEl.innerHTML = '<span class="h">Source</span>' + n + ' · ' + step.src + (step.escalate ? '  ·  escalated to a human, full context' : '');
+        refsEl.innerHTML = '<span class="h">Source</span>' + n + ' · ' + step.src + (step.escalate ? '  ·  handed to a person, with a summary' : '');
         if (!step.escalate) { await wait(900); var ok = add("sys", "", "did that solve it?  ·  resolved"); rise(ok); }
         await wait(step.escalate ? 3000 : 2100);
         if (window.gsap) await new Promise(function (r) { gsap.to(ts.children, { opacity: 0, y: -6, duration: 0.4, stagger: 0.03, ease: "power2.in", onComplete: r }); });
