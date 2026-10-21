@@ -4,9 +4,9 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Customer Support Assistant · Donald B. Havery</title>
-<meta name="description" content="An AI customer-support assistant that answers from a company's own help documents, never makes anyone repeat themselves, and hands off to a human at the right moment. Runs on a frontier model (Claude, GPT, Gemini) or fully local. Working demo." />
+<meta name="description" content="An AI customer-support assistant that answers from a company's own help documents, never makes anyone repeat themselves, and hands off to a human at the right moment. Retrieval runs in the browser; an optional Claude step writes the answer. Working demo." />
 <meta property="og:title" content="Support that fixes it, and treats you like a person" />
-<meta property="og:description" content="A per-company AI support assistant: answers from the company's own help docs, never makes anyone repeat themselves, and hands off to a human at the right moment. Runs on a frontier model or fully local." />
+<meta property="og:description" content="A per-company AI support assistant: answers from the company's own help docs, never makes anyone repeat themselves, and hands off to a human at the right moment. Retrieval runs in the browser; an optional Claude step writes the answer." />
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://support.dbhavery.ai" />
 <meta property="og:image" content="https://support.dbhavery.ai/og.png" />
@@ -14,7 +14,7 @@
 <meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="Support that fixes it, and treats you like a person" />
-<meta name="twitter:description" content="A per-company AI support assistant: answers from the company's own help docs, never makes anyone repeat themselves, hands off to a human at the right moment. Frontier model or fully local." />
+<meta name="twitter:description" content="A per-company AI support assistant: answers from the company's own help docs, never makes anyone repeat themselves, hands off to a human at the right moment. Browser retrieval, optional Claude answers." />
 <meta name="twitter:image" content="https://support.dbhavery.ai/og.png" />
 <link rel="icon" href="https://dbhavery.ai/favicon.svg" />
 <link rel="preconnect" href="https://api.fontshare.com" crossorigin />
@@ -175,12 +175,12 @@
     <div>
       <div class="edition">Field note 01 · Customer support, made human</div>
       <h1 id="h1">Support that fixes it, <span class="u">and treats you like a person.</span><sup>1</sup></h1>
-      <p class="standfirst">Everyone knows what bad customer service feels like: the hold music, repeating your story five times, a script that never solves anything. This is a support assistant built to do the opposite. It listens, answers from the company's real help articles, and hands you to a human the moment one is needed, with the whole conversation attached so you never start over. <b>Compassion and competence, tuned to any business.</b></p>
+      <p class="standfirst">Everyone knows what bad customer service feels like: the hold music, repeating your story five times, a script that never solves anything. This is a support assistant built to do the opposite. It listens, answers from the company's real help articles, and hands you to a human the moment one is needed, with a written summary of the conversation so you never start over. <b>Compassion and competence, tuned to any business.</b></p>
       <div class="leadbtns">
         <button class="go" data-hot onclick="window.openSupportDemo&&window.openSupportDemo()">Chat with it →</button>
         <a href="#fix" data-hot>See how it helps</a>
       </div>
-      <div class="byline">By Donald B. Havery · grounded retrieval, runs on a frontier model or fully local</div>
+      <div class="byline">By Donald B. Havery · retrieval over help articles, with an optional Claude answer step</div>
     </div>
 
     <figure id="heroFig">
@@ -192,7 +192,7 @@
   </div>
   <hr class="rule" />
   <p class="byline" style="padding:14px 0 0;color:var(--ink-2);max-width:62em;font-size:13px;line-height:1.6">
-    <b style="color:var(--ink-2)">Note on this page.</b> A static, always-on edition. The transcript and the live assistant answer from a sample company's real help articles by client-side retrieval, with each source footnoted. The full application runs the same retrieval and then a language model, hosted or local, writes the reply. This page swaps that one step for fixed answers so it costs nothing and never goes down.
+    <b style="color:var(--ink-2)">Note on this page.</b> The live assistant ranks a sample company's help articles in your browser (BM25) and shows the section it found, with the article and section named. When the site operator turns on the model step with their own Anthropic key, Claude writes a short answer from only those passages, and the answer is checked against them before it is shown. When the model step is off, which is the default, the assistant shows the help article section directly and says so. "Talk to a person" shows the summary a teammate would receive; this demo has no inbox, so nothing is sent. The self-playing transcripts on this page are written examples.
   </p>
 </div>
 
@@ -251,7 +251,7 @@
         <div class="qa q reveal"><div class="mk">C</div><div class="tx">I just need it before the weekend, honestly.</div></div>
         <div class="qa ans reveal"><div class="mk">A</div><div class="tx">Completely fair. Overnight arrives the next business day if it ships before noon Pacific, and I have marked this one urgent. I'm handing you to a teammate now with everything above, so you won't repeat a word of it. If you would rather call, the team is at 1-800-555-0142.<sup>2</sup></div></div>
       </div>
-      <div class="refs"><span class="h">Sources</span>1 · warranty.md &nbsp; &nbsp; 2 · shipping-policy.md · escalated to a human, full context</div>
+      <div class="refs"><span class="h">Sources</span>1 · warranty.md &nbsp; &nbsp; 2 · shipping-policy.md · handed to a person, with a summary</div>
     </figure>
     <p class="deck reveal">No hold music. No repeating the story. A grounded answer, real warmth, and a person brought in at the right moment with the whole thread in hand.</p>
   </div>
@@ -276,7 +276,7 @@
     <h2 class="h2 reveal">It hands off to a human, not into a void.</h2>
     <p class="deck reveal">The most common way AI support fails is the handoff itself: the customer gets bounced to a person and has to start the whole story over. That moment of lost context is the biggest single reason people say they hate support bots, so it is the part this is built around.</p>
     <div class="cols reveal">
-      <div class="pt"><div class="lab">No restart</div><h3>The human inherits the whole conversation.</h3><p>What was asked, which article answered it, what the assistant already tried, and the customer's own words all travel to the agent. The person picks up where the bot left off, and nobody repeats themselves.</p></div>
+      <div class="pt"><div class="lab">No restart</div><h3>The human gets a summary of the whole conversation.</h3><p>What was asked, which article answered it, why it was handed off, and the customer's own words go into the handoff summary. The person picks up where the bot left off, and nobody repeats themselves.</p></div>
       <div class="pt"><div class="lab">Right moment</div><h3>It escalates before you have to beg.</h3><p>A frustrated tone, the same question asked twice, or a high-stakes topic trips a handoff on its own. The customer never has to fight a menu to reach a person.</p></div>
       <div class="pt"><div class="lab">Humans decide</div><h3>People keep the judgment calls.</h3><p>The assistant clears the repetitive volume so a person spends their hours on the cases that genuinely need one, arriving with the easy parts already done.</p></div>
     </div>
@@ -363,6 +363,7 @@ llm:
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lenis/1.1.13/lenis.min.js"></script>
 <script src="assets/kb.js"></script>
+<script src="assets/core.js"></script>
 <script src="assets/app.js"></script>
 <script src="assets/widget.js"></script>
 </body>
